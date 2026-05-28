@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ public class CustomerController {
     private String geminiApiKey;
 
     // ─── OFFICER ENDPOINTS ────────────────────────────────────────────────────
-
+    
     @PreAuthorize("hasRole('OFFICER') or hasRole('MANAGER') or hasRole('ADMIN')")
     @PostMapping("/draft")
     public ResponseEntity<?> createDraft(@RequestBody CreateDraftCifRequest request) {
@@ -87,6 +88,8 @@ public class CustomerController {
         return ResponseEntity.ok("Customer submitted for review");
     }
 
+    // ─── MANAGER + ADMIN ENDPOINTS ────────────────────────────────────────────
+
     @PreAuthorize("hasRole('OFFICER') or hasRole('MANAGER') or hasRole('ADMIN')")
     @PutMapping("/{cifId}/signature")
     public ResponseEntity<String> saveSignature(
@@ -95,8 +98,6 @@ public class CustomerController {
         customerService.saveSignature(cifId, request);
         return ResponseEntity.ok("Signature saved");
     }
-
-    // ─── MANAGER + ADMIN ENDPOINTS ────────────────────────────────────────────
 
     @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
     @PutMapping("/{cifId}/approve")
@@ -147,6 +148,8 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.getPendingModifications());
     }
 
+    // ─── OFFICER MODIFY ENDPOINTS ─────────────────────────────────────────────
+
     @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
     @PutMapping("/modifications/{requestId}/review")
     public ResponseEntity<String> reviewModification(
@@ -155,8 +158,6 @@ public class CustomerController {
         customerService.reviewModification(requestId, request);
         return ResponseEntity.ok("Modification " + request.getAction() + "d successfully");
     }
-
-    // ─── OFFICER MODIFY ENDPOINTS ─────────────────────────────────────────────
 
     @PreAuthorize("hasRole('OFFICER') or hasRole('MANAGER') or hasRole('ADMIN')")
     @PutMapping("/{cifId}/modify/basic-info")
@@ -194,6 +195,8 @@ public class CustomerController {
         return ResponseEntity.ok("Risk updated");
     }
 
+    // ─── OPEN ENDPOINTS (no auth required) ───────────────────────────────────
+
     @PreAuthorize("hasRole('OFFICER') or hasRole('MANAGER') or hasRole('ADMIN')")
     @PostMapping("/{cifId}/modifications")
     public ResponseEntity<String> submitModification(
@@ -208,8 +211,6 @@ public class CustomerController {
         );
         return ResponseEntity.ok(requestId);
     }
-
-    // ─── OPEN ENDPOINTS (no auth required) ───────────────────────────────────
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllCustomers() {
@@ -241,12 +242,53 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.getFollowupStatusMaster());
     }
 
+    // ─── CHAT ─────────────────────────────────────────────────────────────────
+
+//    @PostMapping("/chat")
+//    public ResponseEntity<Map<String, Object>> chat(@RequestBody Map<String, Object> body) {
+//        try {
+//            RestTemplate restTemplate = new RestTemplate();
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setContentType(MediaType.APPLICATION_JSON);
+//
+//            List<Map<String, Object>> history = (List<Map<String, Object>>) body.get("history");
+//            List<Map<String, Object>> contents = new ArrayList<>();
+//
+//            for (Map<String, Object> msg : history) {
+//                String role = msg.get("role").equals("assistant") ? "model" : "user";
+//                String text = (String) msg.get("content");
+//                contents.add(Map.of("role", role, "parts", List.of(Map.of("text", text))));
+//            }
+//
+//            Map<String, Object> requestBody = new HashMap<>();
+//            requestBody.put("contents", contents);
+//            requestBody.put("generationConfig", Map.of("temperature", 0.7, "maxOutputTokens", 2048));
+//
+//            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+//            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
+//
+//            System.out.println("[Chat] Calling Gemini...");
+//            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+//
+//            List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.getBody().get("candidates");
+//            Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
+//            List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
+//            String replyText = parts.get(0).get("text").toString();
+//
+//            return ResponseEntity.ok(Map.of("reply", replyText));
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.ok(Map.of("reply", "AI assistant error. Please try again."));
+//        }
+//    }
+
     @GetMapping("/{cifId}/modifications")
     public ResponseEntity<List<Map<String, Object>>> getModificationsByCif(@PathVariable String cifId) {
         return ResponseEntity.ok(customerService.getModificationsByCif(cifId));
     }
 
-    // ─── CHAT ─────────────────────────────────────────────────────────────────
+    // ── ADD THESE TWO ENDPOINTS TO CustomerController.java ───────────────────────
 
     @PostMapping("/chat")
     public ResponseEntity<Map<String, Object>> chat(@RequestBody Map<String, Object> body) {
@@ -255,9 +297,23 @@ public class CustomerController {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
+            // ✅ Get context from request
+            String context = (String) body.get("context");
+
+            // ✅ Add current date to context
+            String currentDate = LocalDate.now().toString(); // 2025-07-15
+            String systemInstruction = context + "\n\nCurrent date: " + currentDate;
+
             List<Map<String, Object>> history = (List<Map<String, Object>>) body.get("history");
             List<Map<String, Object>> contents = new ArrayList<>();
 
+            // ✅ Add system message first
+            contents.add(Map.of(
+                    "role", "user",
+                    "parts", List.of(Map.of("text", systemInstruction))
+            ));
+
+            // ✅ Add conversation history
             for (Map<String, Object> msg : history) {
                 String role = msg.get("role").equals("assistant") ? "model" : "user";
                 String text = (String) msg.get("content");
@@ -266,28 +322,46 @@ public class CustomerController {
 
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("contents", contents);
-            requestBody.put("generationConfig", Map.of("temperature", 0.7, "maxOutputTokens", 2048));
+            requestBody.put("generationConfig", Map.of(
+                    "temperature", 0.7,
+                    "maxOutputTokens", 2048,
+                    "topP", 0.8,
+                    "topK", 40
+            ));
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + geminiApiKey;
 
             System.out.println("[Chat] Calling Gemini...");
             ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
 
-            List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.getBody().get("candidates");
+            // ✅ Handle safety ratings check
+            Map<String, Object> responseBody = response.getBody();
+
+            if (responseBody.containsKey("promptFeedback")) {
+                Map<String, Object> feedback = (Map<String, Object>) responseBody.get("promptFeedback");
+                if (feedback.containsKey("blockReason")) {
+                    return ResponseEntity.ok(Map.of("reply", "I couldn't process that request."));
+                }
+            }
+
+            List<Map<String, Object>> candidates = (List<Map<String, Object>>) responseBody.get("candidates");
+            if (candidates == null || candidates.isEmpty()) {
+                return ResponseEntity.ok(Map.of("reply", "No response generated. Please try again."));
+            }
+
             Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
             List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
             String replyText = parts.get(0).get("text").toString();
 
+            System.out.println("[Chat] Response: " + replyText);
             return ResponseEntity.ok(Map.of("reply", replyText));
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.ok(Map.of("reply", "AI assistant error. Please try again."));
+            return ResponseEntity.ok(Map.of("reply", "Error: " + e.getMessage()));
         }
     }
-
-    // ── ADD THESE TWO ENDPOINTS TO CustomerController.java ───────────────────────
 
     @PreAuthorize("hasRole('OFFICER') or hasRole('MANAGER') or hasRole('ADMIN')")
     @PutMapping("/{cifId}/nominee")
@@ -306,5 +380,4 @@ public class CustomerController {
         customerService.addIncome(cifId, request);
         return ResponseEntity.ok(Map.of("message", "Income details saved"));
     }
-
 }

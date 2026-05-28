@@ -422,6 +422,11 @@ export default function CustomerDetail() {
         { id:"overview",  label:"Customer Info",       icon:"👤", color:"#1a3a5c", role:"all",     desc:"View full details" },
         // OFFICER tiles
         { id:"basic-info",label:"Update Basic Info",   icon:"✏️", color:"#1a6b8a", role:"officer", desc:"Edit name, mobile, email" },
+
+
+        { id:"demand-ops",label:"Demand Ops",          icon:"💳", color:"#0f766e", role:"officer", desc:"Open/view CASA accounts" },
+
+
         { id:"address",   label:"Update Address",      icon:"🏠", color:"#1a6b8a", role:"officer", desc:"Add/update address" },
         { id:"kyc",       label:"KYC Details",         icon:"🪪", color:"#2d7a4f", role:"officer", desc:"PAN, Aadhaar" },
         { id:"risk",      label:"Risk Profile",        icon:"⚠️", color:"#2d7a4f", role:"officer", desc:"Income, occupation" },
@@ -510,6 +515,8 @@ export default function CustomerDetail() {
                                 if (t.disabled) return;
                                 if (t.id === "modify")         navigate(`/customers/${cifId}/modify`);
                                 else if (t.id === "modifications") navigate(`/modifications/pending`);
+//                                 else if (t.id === "demand-ops")    navigate(`/demand-ops/${cifId}`);
+                                else if (t.id === "demand-ops")    navigate(`/customers/${cifId}/demand-account`);
                                 else openPanel(t.id);
                             }}>
                             <div className="cd-tile-icon">{t.icon}</div>

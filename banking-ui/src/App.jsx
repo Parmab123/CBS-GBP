@@ -10,6 +10,7 @@ import CustomerDetail from "./component/customers/customerOperation/CustomerDeta
 import ModificationRequest from "./component/customers/customerOperation/Modificationrequest";
 import ModificationApproval from "./component/customers/customerOperation/Modificationapproval";
 import DemandAccountOps from "./component/casa/Demandaccountops.jsx";
+import VerifyOtp from "./pages/login/VerifyOtp";
 
 // ── Placeholder pages ─────────────────────────────────────────────────────────
 const Placeholder = ({title}) => (
@@ -40,6 +41,8 @@ export default function App() {
 
                 {/* ── Public ─────────────────────────────────────── */}
                 <Route path="/login" element={<Login/>}/>
+
+                <Route path="/verify-otp" element={<VerifyOtp />} />
 
                 {/* ── Dashboard ──────────────────────────────────── */}
                 <Route path="/dashboard" element={

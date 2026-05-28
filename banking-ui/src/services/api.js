@@ -165,6 +165,7 @@ export const customerApi = {
     // GET    /api/customers/{cifId}/modifications
     getModificationsByCif: (cifId) =>
         api.get(`/api/customers/${cifId}/modifications`),
+    
 
     // POST   /api/customers/chat  (Gemini AI)
     chat: (history, context) =>
