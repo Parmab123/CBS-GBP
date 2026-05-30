@@ -2,10 +2,12 @@ package com.cbs.casa.controller;
 
 import com.cbs.casa.dto.CasaAccountRequest;
 import com.cbs.casa.dto.CasaStatusRequest;
+import com.cbs.casa.dto.DepositRequest;
 import com.cbs.casa.services.CasaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -60,5 +62,26 @@ public class CasaAccountController {
     public ResponseEntity<List<Map<String, Object>>> getSchemes(
             @RequestParam(required = false) String accountType) {
         return ResponseEntity.ok(casaService.getSchemes(accountType));
+    }
+
+    @PostMapping("/deposit")
+    public ResponseEntity<?> deposit(
+
+            @RequestBody DepositRequest request,
+
+            Authentication authentication
+    ) {
+
+        casaService.deposit(
+                request,
+                authentication.getName()
+        );
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "message",
+                        "Amount deposited successfully"
+                )
+        );
     }
 }

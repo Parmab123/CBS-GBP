@@ -54,9 +54,15 @@ body {
     stroke-width: 2.5;
 }
 
-.da-body {
+/* .da-body {
     padding: 20px 24px;
     max-width: 1100px;
+} */
+
+.da-body {
+    width: 100%;
+    padding: 20px 24px;
+    max-width: 100%;
 }
 
 .da-hero {
@@ -156,7 +162,8 @@ tbody td {
     color: #c8a96e;
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus {
     border-color: rgba(200, 169, 110, .5) !important;
     outline: none;
 }
@@ -199,4 +206,89 @@ input:focus, select:focus {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+}
+
+
+.account-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.account-actions button {
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: .68rem;
+    font-weight: 600;
+    transition: .2s;
+}
+
+.deposit-btn {
+    background: #123d2b;
+    color: #4ade80;
+}
+
+.withdraw-btn {
+    background: #3d2b12;
+    color: #fbbf24;
+}
+
+.transfer-btn {
+    background: #102f4a;
+    color: #60a5fa;
+}
+
+.modify-btn {
+    background: #2e234a;
+    color: #c084fc;
+}
+
+.close-btn {
+    background: #4a1d1d;
+    color: #f87171;
+}
+
+.account-actions button:hover {
+    transform: translateY(-1px);
+    opacity: .9;
+}
+
+.da-modal-wide::-webkit-scrollbar {
+    width: 8px;
+}
+
+.da-modal-wide::-webkit-scrollbar-thumb {
+    background: #2b3548;
+    border-radius: 10px;
+}
+
+.da-modal-wide {
+    width: 95vw;
+    height: 92vh;
+    background: #161b26;
+    border: 1px solid rgba(200, 169, 110, .2);
+    border-radius: 12px;
+    overflow: auto;
+}
+
+.da-modal-body {
+    padding: 24px;
+}
+
+.da-modal-body input,
+.da-modal-body textarea {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+}
+
+.da-modal-body textarea {
+    min-height: 90px;
+    resize: none;
 }

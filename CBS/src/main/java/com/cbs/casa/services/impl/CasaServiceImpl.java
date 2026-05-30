@@ -2,11 +2,14 @@ package com.cbs.casa.services.impl;
 
 import com.cbs.casa.dto.CasaAccountRequest;
 import com.cbs.casa.dto.CasaStatusRequest;
+import com.cbs.casa.dto.DepositRequest;
 import com.cbs.casa.entiity.AccountFacilities;
 import com.cbs.casa.entiity.AccountStatusLog;
+import com.cbs.casa.entiity.AccountTransaction;
 import com.cbs.casa.entiity.CasaAccount;
 import com.cbs.casa.repo.AccountFacilitiesRepository;
 import com.cbs.casa.repo.AccountStatusLogRepository;
+import com.cbs.casa.repo.AccountTransactionRepository;
 import com.cbs.casa.repo.CasaAccountRepository;
 import com.cbs.casa.services.CasaService;
 import jakarta.persistence.EntityManager;
@@ -17,10 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class CasaServiceImpl implements CasaService {
 
     // EntityManager only for SP calls and master data queries
     private final EntityManager entityManager;
-
+    private final AccountTransactionRepository transactionRepository;
     // ── Create CASA Account ───────────────────────────────────────────────────
 
     @Transactional
@@ -251,5 +252,77 @@ public class CasaServiceImpl implements CasaService {
             result.add(map);
         }
         return result;
+    }
+
+    @Override
+    @Transactional
+    public void deposit(
+            DepositRequest request,
+            String username
+    ) {
+
+
+        CasaAccount account =
+                casaAccountRepository
+                        .findByAccountNumber(
+                                request.getAccountNumber()
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Account not found"
+                                )
+                        );
+
+        if (!"ACTIVE".equals(
+                account.getAccountStatus()
+        )) {
+
+            throw new RuntimeException(
+                    "Account is not active"
+            );
+        }
+
+        BigDecimal newBalance =
+                account.getCurrentBalance()
+                        .add(request.getAmount());
+
+        account.setCurrentBalance(newBalance);
+
+        casaAccountRepository.save(account);
+
+        AccountTransaction transaction =
+                new AccountTransaction();
+
+        transaction.setTransactionId(
+                UUID.randomUUID().toString()
+        );
+
+        transaction.setAccountNumber(
+                account.getAccountNumber()
+        );
+
+        transaction.setTransactionType("DEPOSIT");
+
+        transaction.setAmount(
+                request.getAmount()
+        );
+
+        transaction.setBalanceAfter(
+                newBalance
+        );
+
+        transaction.setRemarks(
+                request.getRemarks()
+        );
+
+        transaction.setCreatedBy(
+                username
+        );
+
+        transaction.setCreatedDate(
+                LocalDateTime.now()
+        );
+
+        transactionRepository.save(transaction);
     }
 }
