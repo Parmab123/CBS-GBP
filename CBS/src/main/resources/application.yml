@@ -1,18 +1,14 @@
 spring:
   datasource:
-    url: jdbc:postgresql://ep-blue-mountain-aovvkyll.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
-    username: neondb_owner
-    password: npg_sqVFgYU2l7Br
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
-
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
 
 gemini:
   api:
-    key: AQ.Ab8RN6I-RmfNzLxqzn7qWsVAsQpswC40xPwe_l9-IMDTXRcebg
+    key: ${GEMINI_API_KEY}
